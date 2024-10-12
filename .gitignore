@@ -1,0 +1,6 @@
+activate
+tracklists/
+.venv/
+.cache
+request-search
+request-token
