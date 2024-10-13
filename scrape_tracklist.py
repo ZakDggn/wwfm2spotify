@@ -2,33 +2,33 @@ from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup
 from pathlib import Path
 import html
+import argparse
 
-url = "https://worldwidefm.net/episode/brownswood-basement-gilles-peterson-44"
+parser = argparse.ArgumentParser()
+parser.add_argument("url")
+args = parser.parse_args()
+
+url = args.url
 filename = url.split("/")[-1] + ".txt"
 path = "tracklists/" + filename
 if Path(path).is_file():
-    print("Tracklist already scraped")
-    exit()
+    raise SystemExit("Tracklist already scraped")
 
 req = Request(
     url=url,
-    headers={
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36"
-    },
+    headers={"User-Agent": "Mozilla/5.0"},
 )
 page = urlopen(req).read().decode("utf-8")
 soup = BeautifulSoup(page, "html.parser")
 
-tracklist = soup.find_all("div", class_="episode-tracklist filled")[0]
-tracklist = tracklist.find_all("p")[0]
-tracklist = str(tracklist)
-start = tracklist.find("<p>") + len("<p>")
-end = tracklist.find("</p>")
-tracklist = tracklist[start:end]
-tracklist = tracklist.split("<br/>")
-tracklist = list(filter(None, tracklist))
-tracklist = list(map(html.unescape, tracklist))
-# remove lines with <strong>/in session/in conversation
+tracklist = soup.find("div", class_="episode-tracklist filled")
+div = tracklist.div
+if div.p:
+    tracklist = div.p.stripped_strings
+else:
+    tracklist = div.stripped_strings
+tracklist = filter(None, tracklist)
+tracklist = map(html.unescape, tracklist)
 tracklist = [track for track in tracklist if "-" in track]
 
 with open(path, "w") as file:
