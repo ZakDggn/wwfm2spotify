@@ -1,8 +1,8 @@
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
-import pprint
 from thefuzz import fuzz
 import argparse
+import re
 
 
 # Split track into artist and track name, and remove featuring artists
@@ -26,6 +26,7 @@ def get_uri(items, artist_name, track_name, threshold_ratio=80):
     best_ratio = 0
     best_artist_ratio = 0
     best_track_ratio = 0
+    best_uri = None
     for item in items:
         artist_result = item["artists"][0]["name"]
         track_result = item["name"]
@@ -37,8 +38,19 @@ def get_uri(items, artist_name, track_name, threshold_ratio=80):
             best_ratio = match_ratio
             best_artist_ratio = artist_ratio
             best_track_ratio = track_ratio
+            best_uri = uri
     if best_artist_ratio > threshold_ratio and best_track_ratio > threshold_ratio:
-        return uri
+        return best_uri
+
+
+def get_search_results(sp, artist_name, track_name):
+    results = sp.search(
+        q=f"{artist_name.lower()} {track_name.lower()}",
+        type="track",
+        limit=10,
+        market="gb",
+    )
+    return results["tracks"]["items"]
 
 
 def tracklist_to_uris(path):
@@ -52,16 +64,23 @@ def tracklist_to_uris(path):
         except ValueError as e:
             print(e)
             continue
-        results = sp.search(
-            q=f"{artist_name.lower()} {track_name.lower()}",
-            type="track",
-            limit=10,
-            market="gb",
-        )
-        items = results["tracks"]["items"]
+        items = get_search_results(sp, artist_name, track_name)
         uri = get_uri(items, artist_name, track_name)
+        if uri is None:
+            # remove extra text inside parentheses and square brackets
+            pattern = r"\(.*?\)|\[.*?\]"
+            artist_name = re.sub(pattern, "", artist_name).strip()
+            track_name = re.sub(pattern, "", track_name).strip()
+            items = get_search_results(sp, artist_name, track_name)
+            uri = get_uri(items, artist_name, track_name)
+        if uri is None:
+            # swap artist and track
+            uri = get_uri(items, track_name, artist_name)
         if uri:
             uris.append(uri)
+        else:
+            with open("tracks_not_found.txt", "a") as file:
+                file.write(track + "\n")
     return uris
 
 

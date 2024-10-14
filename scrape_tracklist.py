@@ -22,7 +22,8 @@ def scrape_tracklist(url):
 
     tracklist = soup.find("div", class_="episode-tracklist filled")
     if tracklist is None or tracklist.string is None:
-        raise SystemExit("Tracklist not found")
+        print("Tracklist not found")
+        return
     div = tracklist.div
     if div.p:
         tracklist = div.p.stripped_strings

@@ -1,16 +1,25 @@
+from pathlib import Path
 from scrape_tracklist import scrape_tracklist
 from tracklist_to_uris import tracklist_to_uris
 from uris_to_playlist import uris_to_playlist
 
-url = "https://worldwidefm.net/episode/gilles-peterson-brownswood-basement-26-10-2017-2"
-with open("completed_urls.txt") as file:
-    lines = file.read().splitlines()
-    if url in lines:
-        raise SystemExit("Tracks already added to playlist")
+with open("urls.txt") as file:
+    urls = file.read().splitlines()
 
-path = scrape_tracklist(url)
-uris = tracklist_to_uris(path)
-uris_to_playlist(uris)
+completed_path = Path("completed_urls.txt")
+if completed_path.is_file():
+    with open(completed_path) as file:
+        completed_urls = file.read().splitlines()
 
-with open("completed_urls.txt", "a") as file:
-    file.write(url)
+for url in urls[:3]:
+    print(url)
+    if url in completed_urls:
+        print("Tracks already added to playlist")
+        continue
+    path = scrape_tracklist(url)
+    if path is None:
+        continue
+    uris = tracklist_to_uris(path)
+    uris_to_playlist(uris)
+    with open(completed_path, "a") as file:
+        file.write(url)

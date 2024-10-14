@@ -1,6 +1,7 @@
-activate
-tracklists/
+__pycache__/
 .venv/
+tracklists/
 .cache
+activate
 request-search
 request-token
