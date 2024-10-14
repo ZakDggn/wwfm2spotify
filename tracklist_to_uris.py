@@ -41,7 +41,9 @@ def get_uri(items, artist_name, track_name, threshold_ratio=80):
         return uri
 
 
-def tracks_to_uris(tracks):
+def tracklist_to_uris(path):
+    with open(path) as file:
+        tracks = file.read().splitlines()
     sp = spotipy.Spotify(auth_manager=SpotifyOAuth())
     uris = []
     for track in tracks:
@@ -63,12 +65,10 @@ def tracks_to_uris(tracks):
     return uris
 
 
-parser = argparse.ArgumentParser()
-parser.add_argument("tracklist")
-args = parser.parse_args()
-tracklist = args.tracklist
-with open(tracklist) as file:
-    tracks = file.read().splitlines()
-
-uris = tracks_to_uris(tracks)
-print(uris)
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("tracklist")
+    args = parser.parse_args()
+    tracklist = args.tracklist
+    uris = tracklist_to_uris(tracklist)
+    print(uris)
