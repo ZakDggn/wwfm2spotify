@@ -21,6 +21,18 @@ def parse_track(track):
     return (artist_name, track_name)
 
 
+def get_closest_artist(artist_results, artist_name):
+    closest_artist = ""
+    closest_ratio = 0
+    for artist in artist_results:
+        name = artist["name"]
+        ratio = fuzz.partial_ratio(name, artist_name)
+        if ratio > closest_ratio:
+            closest_artist = name
+            closest_ratio = ratio
+    return closest_artist
+
+
 # Find closest match in items and return its uri, or None if match not found
 def get_uri(items, artist_name, track_name, threshold_ratio=80):
     best_ratio = 0
@@ -28,7 +40,7 @@ def get_uri(items, artist_name, track_name, threshold_ratio=80):
     best_track_ratio = 0
     best_uri = None
     for item in items:
-        artist_result = item["artists"][0]["name"]
+        artist_result = get_closest_artist(item["artists"], artist_name)
         track_result = item["name"]
         uri = item["uri"]
         artist_ratio = fuzz.partial_ratio(artist_result.lower(), artist_name.lower())
@@ -39,7 +51,7 @@ def get_uri(items, artist_name, track_name, threshold_ratio=80):
             best_artist_ratio = artist_ratio
             best_track_ratio = track_ratio
             best_uri = uri
-    if best_artist_ratio > threshold_ratio and best_track_ratio > threshold_ratio:
+    if best_artist_ratio >= threshold_ratio and best_track_ratio >= threshold_ratio:
         return best_uri
 
 
@@ -67,10 +79,11 @@ def tracklist_to_uris(path):
         items = get_search_results(sp, artist_name, track_name)
         uri = get_uri(items, artist_name, track_name)
         if uri is None:
-            # remove extra text inside parentheses and square brackets
-            pattern = r"\(.*?\)|\[.*?\]"
-            artist_name = re.sub(pattern, "", artist_name).strip()
-            track_name = re.sub(pattern, "", track_name).strip()
+            # remove text inside brackets or after 'with'
+            patterns = [r"\(.*?\)|\[.*?\]", "with.*"]
+            for pattern in patterns:
+                artist_name = re.sub(pattern, "", artist_name).strip()
+                track_name = re.sub(pattern, "", track_name).strip()
             items = get_search_results(sp, artist_name, track_name)
             uri = get_uri(items, artist_name, track_name)
         if uri is None:

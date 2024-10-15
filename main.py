@@ -7,6 +7,7 @@ with open("urls.txt") as file:
     urls = file.read().splitlines()
 
 completed_path = Path("completed_urls.txt")
+completed_urls = []
 if completed_path.is_file():
     with open(completed_path) as file:
         completed_urls = file.read().splitlines()
@@ -22,4 +23,4 @@ for url in urls[:3]:
     uris = tracklist_to_uris(path)
     uris_to_playlist(uris)
     with open(completed_path, "a") as file:
-        file.write(url)
+        file.write(url + "\n")
