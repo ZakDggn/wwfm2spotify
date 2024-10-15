@@ -24,16 +24,15 @@ def scrape_tracklist(url):
     if tracklist is None or tracklist.text == "":
         print("Tracklist not found")
         return
-    div = tracklist.div
-    if div.p:
-        tracklist = div.p.stripped_strings
-    else:
-        tracklist = div.stripped_strings
+    tracklist = tracklist.stripped_strings
     tracklist = filter(None, tracklist)
     tracklist = map(html.unescape, tracklist)
     tracklist = [track.replace("–", "-") for track in tracklist]
     tracklist = [track for track in tracklist if "-" in track]
 
+    if len(tracklist) == 0:
+        print("Tracklist is empty")
+        return
     with open(path, "w") as file:
         file.writelines("\n".join(tracklist))
     return path
