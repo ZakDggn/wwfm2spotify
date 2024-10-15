@@ -74,13 +74,19 @@ def tracklist_to_uris(path):
         try:
             artist_name, track_name = parse_track(track)
         except ValueError as e:
+            with open("track_parse_errors.txt", "a") as file:
+                file.write(str(e) + "\n")
             print(e)
             continue
         items = get_search_results(sp, artist_name, track_name)
         uri = get_uri(items, artist_name, track_name)
         if uri is None:
-            # remove text inside brackets or after 'with'
-            patterns = [r"\(.*?\)|\[.*?\]", "with.*"]
+            # remove '&'
+            pattern = " ?& ?"
+            artist_name = re.sub(pattern, " ", artist_name)
+            track_name = re.sub(pattern, " ", track_name)
+            # remove text inside brackets, text after 'with' and 'and's
+            patterns = [r"\(.*?\)|\[.*?\]", "with.*", " and "]
             for pattern in patterns:
                 artist_name = re.sub(pattern, "", artist_name).strip()
                 track_name = re.sub(pattern, "", track_name).strip()

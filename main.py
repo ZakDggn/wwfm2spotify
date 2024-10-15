@@ -12,7 +12,7 @@ if completed_path.is_file():
     with open(completed_path) as file:
         completed_urls = file.read().splitlines()
 
-for url in urls[:3]:
+for url in urls[:100]:
     print(url)
     if url in completed_urls:
         print("Tracks already added to playlist")
