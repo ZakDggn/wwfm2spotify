@@ -21,7 +21,7 @@ def scrape_tracklist(url):
     soup = BeautifulSoup(page, "html.parser")
 
     tracklist = soup.find("div", class_="episode-tracklist filled")
-    if tracklist is None or tracklist.string is None:
+    if tracklist is None or tracklist.text == "":
         print("Tracklist not found")
         return
     div = tracklist.div
@@ -31,6 +31,7 @@ def scrape_tracklist(url):
         tracklist = div.stripped_strings
     tracklist = filter(None, tracklist)
     tracklist = map(html.unescape, tracklist)
+    tracklist = [track.replace("–", "-") for track in tracklist]
     tracklist = [track for track in tracklist if "-" in track]
 
     with open(path, "w") as file:
@@ -43,5 +44,5 @@ if __name__ == "__main__":
     parser.add_argument("url")
     args = parser.parse_args()
     url = args.url
-    scrape_tracklist(url)
+    path = scrape_tracklist(url)
     print(f"Tracklist saved to {path}")
